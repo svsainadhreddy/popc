@@ -26,3 +26,11 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = ["doctor_id", "name", "email", "phone", "age", "gender", "specialization", "profile_image"]
+        read_only_fields = ["doctor_id"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # make all fields optional for PATCH/PUT
+        for field in self.fields:
+            if field != "doctor_id":
+                self.fields[field].required = False
