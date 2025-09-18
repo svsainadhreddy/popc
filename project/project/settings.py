@@ -43,9 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
+    'patients',
     'rest_framework',
-    'rest_framework.authtoken',
-    
+    'rest_framework.authtoken',  
 ]
 AUTH_USER_MODEL = 'accounts.Doctor'
 REST_FRAMEWORK = {
