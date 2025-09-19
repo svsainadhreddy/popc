@@ -39,3 +39,8 @@ class PatientListView(generics.ListAPIView):
         if query:
             queryset = queryset.filter(name__icontains=query)
         return queryset
+class PatientDeleteView(generics.DestroyAPIView):
+    serializer_class = PatientSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'pk'
+    queryset = Patient.objects.all()
