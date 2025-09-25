@@ -2,8 +2,12 @@ from django.db import models
 from accounts.models import Doctor
 
 class Patient(models.Model):
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name="patients")
-    patient_id = models.CharField(max_length=20, unique=True)
+    doctor = models.ForeignKey(
+        Doctor,
+        on_delete=models.CASCADE,
+        related_name="patients"
+    )
+    patient_id = models.CharField(max_length=20)
     name = models.CharField(max_length=200)
     age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=10, blank=True)
@@ -14,6 +18,13 @@ class Patient(models.Model):
     photo = models.ImageField(upload_to="patient_photos/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['doctor', 'patient_id'], name='unique_patient_per_doctor'
+            )
+        ]
 
     def __str__(self):
         return f"{self.patient_id} - {self.name}"

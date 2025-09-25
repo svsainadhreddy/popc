@@ -1,10 +1,22 @@
-from rest_framework import generics, permissions
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import Survey
 from .serializers import SurveySerializer
 
-class SurveyCreateAPIView(generics.CreateAPIView):
-    queryset = Survey.objects.all()
+class SurveyViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
     serializer_class = SurveySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    queryset = Survey.objects.all()
 
-    # you may override perform_create to set doctor from request.user if applicable
+    # POST /api/surveys/  -> create survey with nested answers
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        survey = serializer.save()
+        return Response(self.get_serializer(survey).data, status=status.HTTP_201_CREATED)
+
+    # Optional: retrieve survey
+    def retrieve(self, request, pk=None):
+        survey = self.get_object()
+        return Response(self.get_serializer(survey).data)

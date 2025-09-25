@@ -1,46 +1,48 @@
 from rest_framework import serializers
-from .models import Survey, Section, Question, Answer
+from .models import Survey, SurveyAnswer, SurveySectionScore
 from patients.models import Patient
 
-class AnswerSerializer(serializers.ModelSerializer):
-    question_id = serializers.IntegerField(write_only=True)
-
+class SurveyAnswerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Answer
-        fields = ['question_id', 'selected_option', 'score']
+        model = SurveyAnswer
+        fields = ("id", "question_text", "selected_option", "option_score")
 
-class SectionSerializer(serializers.ModelSerializer):
-    answers = serializers.SerializerMethodField()
 
+class SurveySectionScoreSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Section
-        fields = ['name', 'score', 'answers']
-
-    def get_answers(self, section):
-        # filter answers by survey+section if you have those fields
-        answers = Answer.objects.filter(section=section)
-        return AnswerSerializer(answers, many=True).data
-
+        model = SurveySectionScore
+        fields = ("id", "section_name", "section_score")
 
 
 class SurveySerializer(serializers.ModelSerializer):
-    # nested
-    sections = SectionSerializer(many=True)
+    answers = SurveyAnswerSerializer(many=True, required=False)
+    section_scores = SurveySectionScoreSerializer(many=True, required=False)
     patient_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Survey
-        fields = ['id', 'patient_id', 'total_score', 'risk_level', 'recommendation', 'sections']
-        read_only_fields = ['id']
+        fields = ("id", "patient_id", "total_score", "answers", "section_scores", "created_at")
 
     def create(self, validated_data):
-        sections_data = validated_data.pop('sections')
-        patient_id = validated_data.pop('patient_id')
-        survey = Survey.objects.create(patient_id=patient_id, **validated_data)
-        for sec_data in sections_data:
-            answers_data = sec_data.get('answers', [])
-            section = Section.objects.create(survey=survey, **sec_data)
-            for ans_data in answers_data:
-                question_id = ans_data.pop('question_id')
-                Answer.objects.create(survey=survey, question_id=question_id, **ans_data)
+        answers_data = validated_data.pop("answers", [])
+        section_scores_data = validated_data.pop("section_scores", [])
+        patient_id = validated_data.pop("patient_id")
+
+        try:
+            patient = Patient.objects.get(pk=patient_id)
+        except Patient.DoesNotExist:
+            raise serializers.ValidationError({"patient_id": "Patient not found"})
+
+        # attach doctor if patient has doctor foreign key
+        doctor = getattr(patient, "doctor", None)
+
+        survey = Survey.objects.create(patient=patient, doctor=getattr(patient, "doctor", None),
+                                       **validated_data)
+
+        for ans in answers_data:
+            SurveyAnswer.objects.create(survey=survey, **ans)
+
+        for sec in section_scores_data:
+            SurveySectionScore.objects.create(survey=survey, **sec)
+
         return survey
