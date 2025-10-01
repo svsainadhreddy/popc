@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    SurveyByPatientWithRiskView,
     SurveyCreateView,
     PatientCompletedSurveys,
     PatientNotCompletedSurveys,
@@ -15,4 +16,5 @@ urlpatterns = [
     path("surveys/stats/", SurveyStatsView.as_view(), name="survey-stats"),
     path("surveys/patient/<int:patient_id>/", SurveyByPatientView.as_view(), name="survey-by-patient"),
     path("dashboard/", DashboardView.as_view(), name="dashboard"),  # ✅ New
+     path("surveys/patient-risk/<int:patient_id>/", SurveyByPatientWithRiskView.as_view(), name="survey-patient-risk"),
 ]
