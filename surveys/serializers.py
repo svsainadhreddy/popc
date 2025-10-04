@@ -12,6 +12,7 @@ class SectionScoreSerializer(serializers.ModelSerializer):
         fields = ["section_name", "score"]
 
 class SurveySerializer(serializers.ModelSerializer):
+    
     patient_id = serializers.PrimaryKeyRelatedField(
         source="patient", queryset=Patient.objects.all()
     )
@@ -41,13 +42,8 @@ class SurveySerializer(serializers.ModelSerializer):
         survey, created = Survey.objects.get_or_create(patient=patient)
 
         # ---------- Update total_score ----------
-        if section_status.lower() == "postoperative":
-            # Overwrite total score for postoperative
-            survey.total_score = validated_data.get("total_score", survey.total_score)
-        else:
-            # Accumulate scores for previous sections
-            section_total = sum(section.get("score", 0) for section in sections_data)
-            survey.total_score = (survey.total_score or 0) + section_total
+        section_total = sum(section.get("score", 0) for section in sections_data)
+        survey.total_score = (survey.total_score or 0) + section_total
 
         # Update status and risk level
         survey.status = section_status
@@ -110,3 +106,16 @@ class PendingPatientSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     status = serializers.CharField()
+
+
+from rest_framework import serializers
+from .models import Survey
+
+class CompletedPatientSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField(source="patient.id", read_only=True)  # Patient DB PK  
+    id = serializers.CharField(source="patient.patient_id", read_only=True)  # Patient custom ID
+    name = serializers.CharField(source="patient.name", read_only=True)      # Patient name
+
+    class Meta:
+        model = Survey
+        fields = ["pk", "id", "name"]

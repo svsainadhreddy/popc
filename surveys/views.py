@@ -1,49 +1,52 @@
+from django.http import Http404
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Survey, Patient
-from .serializers import PendingPatientSerializer, SurveySectionRiskSerializer, SurveySerializer, SurveyDisplaySerializer, DashboardSerializer
+from .serializers import CompletedPatientSerializer, PendingPatientSerializer, SurveySectionRiskSerializer, SurveySerializer, SurveyDisplaySerializer, DashboardSerializer
+from rest_framework.views import APIView
 
 class SurveyCreateView(generics.CreateAPIView):
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
 
+# --------------------  survey completed list --------------------
 class PatientCompletedSurveys(generics.ListAPIView):
-    serializer_class = SurveySerializer
+    serializer_class = CompletedPatientSerializer
+
     def get_queryset(self):
-        return Survey.objects.filter(status="completed")
+        # Return surveys with status 'postoperative' or 'Post Operative'
+        return Survey.objects.filter(status__in=["postoperative", "Post Operative"])
     
 # --------------------  survey not completed list --------------------
-class PatientNotCompletedSurveys(generics.ListAPIView):
-    serializer_class = PendingPatientSerializer
+class PatientNotCompletedSurveys(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        doctor = self.request.user
+    def get(self, request):
+        doctor = request.user
         patients = Patient.objects.filter(doctor=doctor)
-
         pending_patients = []
 
         for patient in patients:
             survey = Survey.objects.filter(patient=patient).order_by("-created_at").first()
+            patient_dict = {
+                "pk": patient.pk,             # ✅ database primary key
+                "id": patient.patient_id,     # custom patient ID
+                "name": patient.name,
+            }
+
             if survey:
                 if survey.status.lower() != "postoperative":
-                    pending_patients.append({
-                        "id": patient.id,
-                        "name": patient.name,
-                        "status": survey.status
-                    })
+                    patient_dict["status"] = survey.status
+                    pending_patients.append(patient_dict)
             else:
-                # No survey at all → treat as pending
-                pending_patients.append({
-                    "id": patient.id,
-                    "name": patient.name,
-                    "status": "Not Started"
-                })
+                patient_dict["status"] = "Not Started"
+                pending_patients.append(patient_dict)
 
-        return pending_patients
+        return Response(pending_patients)
+
 
 
 class SurveyStatsView(generics.GenericAPIView):
@@ -62,6 +65,8 @@ class SurveyByPatientView(generics.RetrieveAPIView):
         patient = get_object_or_404(Patient, id=patient_id)
         # ✅ return single Survey row per patient
         return Survey.objects.filter(patient=patient).first()
+
+
 
 # -------------------- Dashboard API --------------------
 class DashboardView(generics.GenericAPIView):

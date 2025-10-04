@@ -11,6 +11,7 @@ class Survey(models.Model):
         ("surgery_Factors","Surgery Factors"),
         ("preoperative_considerations","Preoperative Considerations"),
         ("postoperative","Post Operative"),
+        ("planned_Anesthesia","Planned Anesthesia"),
     ]
 
     patient = models.ForeignKey(
