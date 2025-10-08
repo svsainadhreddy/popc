@@ -90,7 +90,7 @@ class DashboardView(generics.GenericAPIView):
             survey = Survey.objects.filter(patient=patient).order_by("-created_at").first()
             if survey:
                 surveyed_count += 1
-                if survey.risk_level and survey.risk_level.lower() == "high" or "very high":
+                if survey.risk_level and survey.risk_level.lower() in ["high", "very high"]:
                     high_risk_patients += 1
                 if survey.status.lower() != "postoperative":
                     pending_surveys += 1
@@ -139,3 +139,74 @@ class SurveyByPatientWithRiskView(generics.RetrieveAPIView):
             })
 
         return Response(section_data)
+    
+#---------------------Dashboard view for pie chart---------------------
+class DashboardView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        doctor = request.user
+        patients = Patient.objects.filter(doctor=doctor)
+
+        total_patients = patients.count()
+
+        # Part 1: Survey completion & risk counts
+        pending_surveys = 0
+        high_risk_patients = 0
+        surveyed_count = 0
+
+        # Part 2: Counts by risk level for postoperative surveys
+        stable_count = 0
+        moderate_count = 0
+        high_risk_count = 0
+
+        for patient in patients:
+            surveys = Survey.objects.filter(patient=patient).order_by("-created_at")
+            latest_survey = surveys.first()
+
+            # Aggregate for survey completion & risks (all surveys)
+            if latest_survey:
+                surveyed_count += 1
+                if latest_survey.risk_level and latest_survey.risk_level.lower() in ["high", "very high"]:
+                    high_risk_patients += 1
+                if latest_survey.status.lower() != "postoperative":
+                    pending_surveys += 1
+            else:
+                pending_surveys += 1  # no survey → pending
+
+            # Aggregate for pie chart (only postoperative status)
+            postop_survey = surveys.filter(status="postoperative").first()
+            if postop_survey and postop_survey.risk_level:
+                risk = postop_survey.risk_level.lower()
+                if risk == "low":
+                    stable_count += 1
+                elif risk == "moderate":
+                    moderate_count += 1
+                elif risk in ["high", "very high"]:
+                    high_risk_count += 1
+
+        total_risk_surveys = stable_count + moderate_count + high_risk_count or 1
+        stable_pct = round((stable_count / total_risk_surveys) * 100, 2)
+        moderate_pct = round((moderate_count / total_risk_surveys) * 100, 2)
+        high_risk_pct = round((high_risk_count / total_risk_surveys) * 100, 2)
+
+        data = {
+            # dashboard counts
+            "total_surveyed": surveyed_count,
+            "pending_surveys": pending_surveys,
+            "high_risk_patients": high_risk_patients,
+            "total_patients": total_patients,
+
+            # pie chart percentages
+            "stable": stable_pct,
+            "pending": moderate_pct,
+            "high_risk": high_risk_pct,
+        }
+
+        return Response(data)
+
+
+
+
+
+

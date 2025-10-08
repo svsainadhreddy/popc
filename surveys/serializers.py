@@ -46,8 +46,16 @@ class SurveySerializer(serializers.ModelSerializer):
         survey.total_score = (survey.total_score or 0) + section_total
 
         # Update status and risk level
+        total = survey.total_score
+        if total <= 20:
+            survey.risk_level = "Low"
+        elif total <= 40:
+           survey.risk_level = "Moderate"
+        elif total <= 60:
+            survey.risk_level = "High"
+        else:
+           survey.risk_level = "Very high"
         survey.status = section_status
-        survey.risk_level = validated_data.get("risk_level", survey.risk_level)
         survey.save()
 
         # Create or update SectionScore objects

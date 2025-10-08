@@ -44,4 +44,17 @@ class DoctorProfileUpdateView(generics.UpdateAPIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
-        return self.request.user       
+        return self.request.user   
+        
+       #image          
+class DoctorProfileView(generics.RetrieveAPIView):
+    serializer_class = DoctorProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context

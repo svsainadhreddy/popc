@@ -34,3 +34,9 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
         for field in self.fields:
             if field != "doctor_id":
                 self.fields[field].required = False
+       #image          
+    def get_profile_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.profile_image and hasattr(obj.profile_image, 'url'):
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None
