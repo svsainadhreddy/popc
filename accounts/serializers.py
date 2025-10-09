@@ -23,9 +23,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         doctor.save()
         return doctor
 class DoctorProfileSerializer(serializers.ModelSerializer):
+    profile_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Doctor
-        fields = ["doctor_id", "name", "email", "phone", "age", "gender", "specialization", "profile_image"]
+        fields = [
+            "doctor_id", "name", "email", "phone", "age", "gender",
+            "specialization", "profile_image", "profile_image_url"
+        ]
         read_only_fields = ["doctor_id"]
 
     def __init__(self, *args, **kwargs):

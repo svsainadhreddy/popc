@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+import pymysql
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +32,10 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "10.0.2.2", 
-    "172.25.57.154",  # Android emulator loopback
+    "10.233.194.204",
+    "172.25.57.154",
+    "192.168.190.179",
+      "*",  # Android emulator loopback
 ]
 
 

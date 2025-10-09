@@ -28,13 +28,7 @@ class CustomAuthToken(ObtainAuthToken):
             "email": doctor.email
         })
         
-# GET profile
-class DoctorProfileView(generics.RetrieveAPIView):
-    serializer_class = DoctorProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user  # logged-in doctor
         
 
 # UPDATE profile (with image)
@@ -47,9 +41,10 @@ class DoctorProfileUpdateView(generics.UpdateAPIView):
         return self.request.user   
         
        #image          
-class DoctorProfileView(generics.RetrieveAPIView):
+class DoctorProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = DoctorProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         return self.request.user
