@@ -40,8 +40,14 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
             if field != "doctor_id":
                 self.fields[field].required = False
        #image          
+   
+    
     def get_profile_image_url(self, obj):
         request = self.context.get('request')
         if obj.profile_image and hasattr(obj.profile_image, 'url'):
-            return request.build_absolute_uri(obj.profile_image.url)
+            url = obj.profile_image.url
+            # Check if url starts with http(s), if yes, return as is to avoid double base URL
+            if url.startswith('http://') or url.startswith('https://'):
+                return url
+            return request.build_absolute_uri(url)
         return None
