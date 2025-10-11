@@ -20,6 +20,25 @@ class PatientUpdateView(generics.UpdateAPIView):
     lookup_field = 'pk'
     queryset = Patient.objects.all()
 
+    def update(self, request, *args, **kwargs):
+        patient = self.get_object()
+        new_patient_id = request.data.get("patient_id")
+
+        if new_patient_id is not None:  # field is present in request
+            new_patient_id = str(new_patient_id).strip()
+            current_patient_id = str(patient.patient_id).strip()
+            
+            # Only check uniqueness if non-empty and changed
+            if new_patient_id and new_patient_id != current_patient_id:
+                exists = Patient.objects.filter(patient_id=new_patient_id).exclude(pk=patient.pk).exists()
+                if exists:
+                    return Response(
+                        {"error": f"Patient ID '{new_patient_id}' already exists."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        return super().update(request, *args, **kwargs)  
+
 # Retrieve patient
 class PatientDetailView(generics.RetrieveAPIView):
     serializer_class = PatientSerializer

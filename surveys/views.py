@@ -15,10 +15,35 @@ class SurveyCreateView(generics.CreateAPIView):
 # --------------------  survey completed list --------------------
 class PatientCompletedSurveys(generics.ListAPIView):
     serializer_class = CompletedPatientSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         # Return surveys with status 'postoperative' or 'Post Operative'
         return Survey.objects.filter(status__in=["postoperative", "Post Operative"])
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        data = []
+
+        for survey in queryset:
+            patient = survey.patient
+
+            # Build full URL for photo
+            photo_url = None
+            if patient.photo:
+                scheme = 'https' if request.is_secure() else 'http'
+                host = request.get_host()
+                photo_url = f"{scheme}://{host}{patient.photo.url}"
+
+            data.append({
+                "pk": survey.pk,
+                "id": patient.patient_id,
+                "name": patient.name,
+                "photoUrl": photo_url  # send as photoUrl for consistency
+            })
+
+        return Response(data)
+
     
 # --------------------  survey not completed list --------------------
 class PatientNotCompletedSurveys(APIView):
@@ -30,19 +55,31 @@ class PatientNotCompletedSurveys(APIView):
         pending_patients = []
 
         for patient in patients:
+            # Get latest survey for patient
             survey = Survey.objects.filter(patient=patient).order_by("-created_at").first()
-            patient_dict = {
-                "pk": patient.pk,             # ✅ database primary key
-                "id": patient.patient_id,     # custom patient ID
-                "name": patient.name,
-            }
 
+            # Build full photo URL if exists
+            photo_url = None
+            if patient.photo:
+                scheme = 'https' if request.is_secure() else 'http'
+                host = request.get_host()
+                photo_url = f"{scheme}://{host}{patient.photo.url}"
+
+            # Determine status
+            status = "Not Started"
             if survey:
-                if survey.status.lower() != "postoperative":
-                    patient_dict["status"] = survey.status
-                    pending_patients.append(patient_dict)
-            else:
-                patient_dict["status"] = "Not Started"
+                if survey.status:
+                    status = survey.status
+
+            # Only include pending surveys (not postoperative)
+            if not survey or survey.status.lower() != "postoperative":
+                patient_dict = {
+                    "pk": patient.pk,
+                    "id": patient.patient_id,
+                    "name": patient.name,
+                    "status": status,
+                    "photo": photo_url
+                }
                 pending_patients.append(patient_dict)
 
         return Response(pending_patients)
@@ -166,11 +203,13 @@ class DashboardView(generics.GenericAPIView):
 
             # Aggregate for survey completion & risks (all surveys)
             if latest_survey:
-                surveyed_count += 1
                 if latest_survey.risk_level and latest_survey.risk_level.lower() in ["high", "very high"]:
                     high_risk_patients += 1
                 if latest_survey.status.lower() != "postoperative":
                     pending_surveys += 1
+                if latest_survey.status.lower() == "postoperative":
+                    surveyed_count += 1
+
             else:
                 pending_surveys += 1  # no survey → pending
 
