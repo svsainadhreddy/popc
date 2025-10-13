@@ -36,7 +36,7 @@ class PatientCompletedSurveys(generics.ListAPIView):
                 photo_url = f"{scheme}://{host}{patient.photo.url}"
 
             data.append({
-                "pk": survey.pk,
+                "pk": patient.id,
                 "id": patient.patient_id,
                 "name": patient.name,
                 "photoUrl": photo_url  # send as photoUrl for consistency
@@ -74,7 +74,7 @@ class PatientNotCompletedSurveys(APIView):
             # Only include pending surveys (not postoperative)
             if not survey or survey.status.lower() != "postoperative":
                 patient_dict = {
-                    "pk": patient.pk,
+                    "pk": patient.id,
                     "id": patient.patient_id,
                     "name": patient.name,
                     "status": status,
