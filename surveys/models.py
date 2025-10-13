@@ -43,6 +43,7 @@ class Answer(models.Model):
     survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="answers"
     )
+    section_name = models.CharField(max_length=200)
     question = models.CharField(max_length=255)
     selected_option = models.CharField(max_length=255)
     score = models.IntegerField(default=0)
