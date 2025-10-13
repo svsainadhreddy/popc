@@ -1,3 +1,4 @@
+from urllib import request
 from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Patient
@@ -17,27 +18,13 @@ class PatientUpdateView(generics.UpdateAPIView):
     serializer_class = PatientSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
-    lookup_field = 'pk'
     queryset = Patient.objects.all()
 
     def update(self, request, *args, **kwargs):
-        patient = self.get_object()
-        new_patient_id = request.data.get("patient_id")
+        print("🔍 PUT DATA:", request.data)
+        kwargs['partial'] = True  # allow partial updates
+        return super().update(request, *args, **kwargs)
 
-        if new_patient_id is not None:  # field is present in request
-            new_patient_id = str(new_patient_id).strip()
-            current_patient_id = str(patient.patient_id).strip()
-            
-            # Only check uniqueness if non-empty and changed
-            if new_patient_id and new_patient_id != current_patient_id:
-                exists = Patient.objects.filter(patient_id=new_patient_id).exclude(pk=patient.pk).exists()
-                if exists:
-                    return Response(
-                        {"error": f"Patient ID '{new_patient_id}' already exists."},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-
-        return super().update(request, *args, **kwargs)  
 
 # Retrieve patient
 class PatientDetailView(generics.RetrieveAPIView):
