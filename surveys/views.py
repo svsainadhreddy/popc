@@ -244,7 +244,66 @@ class DashboardView(generics.GenericAPIView):
 
         return Response(data)
 
+# -------------------- High Risk / Completed Patients with Risk --------------------
+class HighRiskPatients(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        # ✅ Only postoperative surveys with High or Very High risk
+        surveys = Survey.objects.filter(
+            status__iexact="postoperative",
+            risk_level__in=["High", "Very High"]
+        )
+        data = []
+
+        for survey in surveys:
+            patient = survey.patient
+
+            # Build full photo URL if photo exists
+            photo_url = None
+            if patient.photo:
+                scheme = 'https' if request.is_secure() else 'http'
+                host = request.get_host()
+                photo_url = f"{scheme}://{host}{patient.photo.url}"
+
+            # Risk level (fallback = "Unknown")
+            risk = survey.risk_level or "Unknown"
+
+            # ✅ Append only high-risk patients
+            data.append({
+                "pk": patient.id,
+                "id": patient.patient_id,
+                "name": patient.name,
+                "photoUrl": photo_url,
+                "risk_status": risk,
+            })
+
+        return Response(data)
+
+
+class SurveySectionAnswersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, patient_id):
+        section_name = request.query_params.get("section", "")
+        if not section_name:
+            return Response({"error": "Section name required"}, status=400)
+
+        patient = get_object_or_404(Patient, id=patient_id)
+        survey = Survey.objects.filter(patient=patient).order_by("-created_at").first()
+
+        if not survey:
+            return Response({"answers": []})
+
+        # Filter answers only for the given section
+        answers = survey.answers.filter(section_name=section_name)
+
+        return Response({
+            "answers": [
+                {"question": a.question, "selected_option": a.selected_option}
+                for a in answers
+            ]
+        })
 
 
 

@@ -44,12 +44,20 @@ class SurveySerializer(serializers.ModelSerializer):
         patient = validated_data.pop("patient")
         section_status = validated_data.get("status", "")
 
-        # Get or create Survey for the patient
-        survey, created = Survey.objects.get_or_create(patient=patient)
+        # ---------- Get or Create Survey ----------
+        survey, _ = Survey.objects.get_or_create(patient=patient)
 
-        # ---------- Calculate total section score ----------
-        section_total = sum(section.get("score", 0) for section in sections_data)
-        survey.total_score = (survey.total_score or 0) + section_total
+        # ---------- Update or Create Section Scores ----------
+        for section in sections_data:
+            SectionScore.objects.update_or_create(
+                survey=survey,
+                section_name=section.get("section_name"),
+                defaults={"score": section.get("score", 0)},
+            )
+
+        # ---------- Recalculate Total Score ----------
+        all_sections = SectionScore.objects.filter(survey=survey)
+        survey.total_score = sum(sec.score for sec in all_sections)
 
         # ---------- Determine Risk Level ----------
         total = survey.total_score
@@ -65,28 +73,20 @@ class SurveySerializer(serializers.ModelSerializer):
         survey.status = section_status
         survey.save()
 
-        # ---------- Create or Update SectionScore ----------
-        for section in sections_data:
-            SectionScore.objects.update_or_create(
-                survey=survey,
-                section_name=section.get("section_name"),
-                defaults={"score": section.get("score", 0)},
-            )
-
         # ---------- Automatically Assign Section Name to Answers ----------
-        # Use section_name from first section if available
-        section_name = None
-        if sections_data:
-            section_name = sections_data[0].get("section_name")
+        # If multiple section names exist, map each answer to the correct one if possible.
+        section_map = {s.get("section_name"): s.get("score") for s in sections_data}
 
         for ans in answers_data:
+            section_name = ans.get("section_name") or next(iter(section_map.keys()), "General")
+
             Answer.objects.update_or_create(
                 survey=survey,
                 question=ans.get("question"),
                 defaults={
                     "selected_option": ans.get("selected_option"),
                     "score": ans.get("score", 0),
-                    "section_name": section_name or survey.status or "General",
+                    "section_name": section_name,
                 },
             )
 
