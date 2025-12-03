@@ -81,13 +81,14 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                 "django.template.context_processors.debug",
             ],
         },
     },
@@ -158,4 +159,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# settings.py
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"            # or your SMTP host
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "svsai798@gmail.com"
+EMAIL_HOST_PASSWORD = "uoka dvri eknj vvmb"
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = "POPC Healthcare <no-reply@clinicapp.com>"
+
+# URL where your frontend app handles the reset flow (web page or deep link)
+PASSWORD_RESET_FRONTEND_URL = "http://127.0.0.1:8000/accounts"  # set to your app's URL
+SITE_NAME = "POPC App"
 

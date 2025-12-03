@@ -1,11 +1,29 @@
 from django.urls import path
-from .views import ChangePasswordView, ChangeUsernameView, DoctorProfileUpdateView, DoctorProfileView, RegisterView, CustomAuthToken
+from .views_password_reset import (
+    ForgotPasswordView,
+    VerifyOtpView,
+    ResetPasswordWithOtpView,
+)
+from .views import (
+    RegisterView,
+    CustomAuthToken,
+    DoctorProfileView,
+    DoctorProfileUpdateView,
+    ChangeUsernameView,
+    ChangePasswordView,
+)
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
-    path('login/', CustomAuthToken.as_view(), name='login'),
-    path("profile/", DoctorProfileView.as_view(), name="doctor-profile"),
-    path("profile/update/", DoctorProfileUpdateView.as_view(), name="doctor-profile-update"),
-    path('change-username/', ChangeUsernameView.as_view(), name='change-username'),
-    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path("register/", RegisterView.as_view()),
+    path("login/", CustomAuthToken.as_view()),
+
+    path("profile/", DoctorProfileView.as_view()),
+    path("profile/update/", DoctorProfileUpdateView.as_view()),
+    path("change-username/", ChangeUsernameView.as_view()),
+    path("change-password/", ChangePasswordView.as_view()),
+
+    # NEW OTP workflow
+    path("forgot-password/", ForgotPasswordView.as_view()),
+    path("verify-otp/", VerifyOtpView.as_view()),
+    path("reset-password/", ResetPasswordWithOtpView.as_view()),
 ]

@@ -1,11 +1,11 @@
 from django.urls import path
-from .views import PatientCreateView, PatientDeleteView, PatientUpdateView, PatientDetailView, PatientListView
+from . import views
 
 urlpatterns = [
-    path('create/', PatientCreateView.as_view(), name='create-patient'),
-    path('<int:pk>/update/', PatientUpdateView.as_view(), name='update-patient'),
-    path('<int:pk>/delete/', PatientDeleteView.as_view(), name='delete-patient'), 
-    path('<int:pk>/', PatientDetailView.as_view(), name='get-patient'),
-    path('', PatientListView.as_view(), name='list-patients'),
-
+    path('next-id/', views.GeneratePatientIdView.as_view(), name='generate-patient-id'),
+    path('create/', views.PatientCreateView.as_view(), name='create-patient'),
+    path('<int:pk>/update/', views.PatientUpdateView.as_view(), name='update-patient'),
+    path('<int:pk>/delete/', views.PatientDeleteView.as_view(), name='delete-patient'),
+    path('<int:pk>/', views.PatientDetailView.as_view(), name='get-patient'),
+    path('', views.PatientListView.as_view(), name='list-patients'),
 ]

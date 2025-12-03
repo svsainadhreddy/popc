@@ -5,6 +5,7 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = '__all__'
+        # allow client to send patient_id (server will also generate if not provided)
         read_only_fields = ['doctor']
 
     def validate(self, data):
@@ -17,12 +18,12 @@ class PatientSerializer(serializers.ModelSerializer):
             patient_id = instance.patient_id
 
         if not patient_id:
-            # No patient_id to validate
+            # Creating without provided patient_id -> server will generate; skip uniqueness check now
             return data
 
         qs = Patient.objects.filter(doctor=doctor, patient_id=patient_id)
         if instance:
-            qs = qs.exclude(pk=instance.pk)  # skip current patient
+            qs = qs.exclude(pk=instance.pk)
 
         if qs.exists():
             raise serializers.ValidationError({

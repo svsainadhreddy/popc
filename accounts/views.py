@@ -1,48 +1,54 @@
-from rest_framework import generics,permissions, status
+# accounts/views.py
+
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from .models import Doctor
-from .serializers import RegisterSerializer
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from .models import Doctor
-from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Doctor
-from .serializers import DoctorProfileSerializer
 
-from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth import authenticate
+
+from .models import Doctor
+from .serializers import RegisterSerializer, DoctorProfileSerializer
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = Doctor.objects.all()
     serializer_class = RegisterSerializer
 
+
 class CustomAuthToken(ObtainAuthToken):
+    """
+    Allows login via username OR email.
+    """
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        token = Token.objects.get(key=response.data['token'])
-        doctor = token.user
+        data = request.data
+        identifier = data.get("username") or data.get("email")
+        password = data.get("password")
+
+        # If identifier is an email
+        if "@" in identifier:
+            try:
+                doctor = Doctor.objects.get(email__iexact=identifier)
+                identifier = doctor.username  # convert to actual username
+            except Doctor.DoesNotExist:
+                pass
+
+        user = authenticate(username=identifier, password=password)
+
+        if user is None:
+            return Response({"error": "Invalid credentials"}, status=400)
+
+        token, created = Token.objects.get_or_create(user=user)
+
         return Response({
             "token": token.key,
-            "doctor_id": doctor.doctor_id,
-            "username": doctor.username,
-            "email": doctor.email
+            "doctor_id": user.doctor_id,
+            "username": user.username,
+            "email": user.email,
         })
-        
 
-        
 
-# UPDATE profile (with image)
-class DoctorProfileUpdateView(generics.UpdateAPIView):
-    serializer_class = DoctorProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
-
-    def get_object(self):
-        return self.request.user   
-        
-       #image          
 class DoctorProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = DoctorProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -53,38 +59,46 @@ class DoctorProfileView(generics.RetrieveUpdateAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context.update({"request": self.request})
+        context["request"] = self.request
         return context
-    
-#username and password
+
+
+class DoctorProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = DoctorProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_object(self):
+        return self.request.user
+
+
 class ChangeUsernameView(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request):
         new_username = request.data.get("username")
         if not new_username:
-            return Response({"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Username is required"}, status=400)
 
         user = request.user
         user.username = new_username
         user.save()
-        return Response({"message": "Username updated successfully"}, status=status.HTTP_200_OK)
+
+        return Response({"message": "Username updated"})
 
 
 class ChangePasswordView(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, *args, **kwargs):
-        old_password = request.data.get("old_password")
-        new_password = request.data.get("new_password")
+    def put(self, request):
+        old = request.data.get("old_password")
+        new = request.data.get("new_password")
 
         user = request.user
-        if not user.check_password(old_password):
-            return Response({"error": "Incorrect old password"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if not user.check_password(old):
+            return Response({"error": "Incorrect old password"}, status=400)
 
-
-        user.set_password(new_password)
+        user.set_password(new)
         user.save()
-        return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
-    
+        return Response({"message": "Password updated"})
