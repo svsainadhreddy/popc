@@ -5,6 +5,7 @@ from .views_password_reset import (
     ResetPasswordWithOtpView,
 )
 from .views import (
+    DeleteAccountView,
     RegisterView,
     CustomAuthToken,
     DoctorProfileView,
@@ -26,4 +27,5 @@ urlpatterns = [
     path("forgot-password/", ForgotPasswordView.as_view()),
     path("verify-otp/", VerifyOtpView.as_view()),
     path("reset-password/", ResetPasswordWithOtpView.as_view()),
+    path("delete-account/", DeleteAccountView.as_view(), name="delete-account"),
 ]

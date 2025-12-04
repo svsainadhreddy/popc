@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate
 
 from .models import Doctor
 from .serializers import RegisterSerializer, DoctorProfileSerializer
-
+from rest_framework.views import APIView
 
 class RegisterView(generics.CreateAPIView):
     queryset = Doctor.objects.all()
@@ -102,3 +102,20 @@ class ChangePasswordView(generics.UpdateAPIView):
         user.set_password(new)
         user.save()
         return Response({"message": "Password updated"})
+
+
+
+class DeleteAccountView(APIView):
+    """
+    DELETE: Delete the authenticated doctor's account and related data.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        # Optionally record an audit log, or soft-delete instead of hard delete, depending on your app needs.
+
+        # Delete the user -> this will cascade if related models have on_delete=CASCADE
+        user.delete()
+
+        return Response({"message": "Account and related data deleted"}, status=status.HTTP_204_NO_CONTENT)
