@@ -19,7 +19,6 @@ pymysql.install_as_MySQLdb()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -29,17 +28,8 @@ SECRET_KEY = 'django-insecure-7w+8=)t&k0o)3ksn&d=4wg#2v3#3*sp-5v9*@@f&97w)hp@y-#
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "10.0.2.2", 
-    "10.233.194.90",
-    "172.25.57.154",
-    "172.23.80.1",
-    "192.168.190.179",
-    "100.90.86.181",
-    "10.233.194.204",
-    "172.20.10.110",
-    "*", 
+    "127.0.0.1", 
+    
 ]
 
 
@@ -97,8 +87,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -115,8 +103,6 @@ AUTH_USER_MODEL = 'accounts.Doctor'
 
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -134,8 +120,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -146,13 +130,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -164,7 +145,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # settings.py
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"            # or your SMTP host
+EMAIL_HOST = "smtp.gmail.com"           
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "svsai798@gmail.com"
 EMAIL_HOST_PASSWORD = "uoka dvri eknj vvmb"
@@ -172,6 +153,6 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "POPC Healthcare <no-reply@clinicapp.com>"
 
 # URL where your frontend app handles the reset flow (web page or deep link)
-PASSWORD_RESET_FRONTEND_URL = "http://127.0.0.1:8000/accounts"  # set to your app's URL
+PASSWORD_RESET_FRONTEND_URL = "http://127.0.0.1:8000/accounts"  
 SITE_NAME = "POPC App"
 
