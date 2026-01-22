@@ -1,0 +1,33 @@
+# -----------------------------
+# Python cache (never commit)
+# -----------------------------
+__pycache__/
+*.pyc
+*.pyo
+
+# -----------------------------
+# Virtual environment
+# -----------------------------
+venv/
+.env/
+
+# -----------------------------
+# Large AI model weights (NEVER COMMIT)
+# -----------------------------
+*.safetensors
+*.bin
+*.pt
+*.gguf
+
+# -----------------------------
+# Local Qwen model weights only
+# (tokenizer/config files are OK)
+# -----------------------------
+llm/qwen_model/*.safetensors
+
+# -----------------------------
+# Editor / OS junk
+# -----------------------------
+.vscode/
+.DS_Store
+Thumbs.db
