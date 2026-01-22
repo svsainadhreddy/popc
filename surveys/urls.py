@@ -1,4 +1,6 @@
 from django.urls import path
+
+from surveys.views_qwen import PPCQwenChatView
 from .views import (
     HighRiskPatients,
     SurveyByPatientWithRiskView,
@@ -8,7 +10,8 @@ from .views import (
     SurveySectionAnswersView,
     SurveyStatsView,
     SurveyByPatientView,
-    DashboardView
+    DashboardView,
+    
 )
 
 urlpatterns = [
@@ -20,5 +23,6 @@ urlpatterns = [
     path("dashboard/", DashboardView.as_view(), name="dashboard"),  
     path("surveys/patient-risk/<int:patient_id>/", SurveyByPatientWithRiskView.as_view(), name="survey-patient-risk"),
     path("surveys/high-risk/", HighRiskPatients.as_view(), name="high-risk-patients"),  
-    path("surveys/<int:patient_id>/section-answers/",SurveySectionAnswersView.as_view(),name="survey-section-answers"),  # ✅ New
+    path("surveys/<int:patient_id>/section-answers/",SurveySectionAnswersView.as_view(),name="survey-section-answers"),
+    path("ppc-qwen-chat/", PPCQwenChatView.as_view()),
 ]

@@ -17,18 +17,19 @@ class PatientCompletedSurveys(generics.ListAPIView):
     serializer_class = CompletedPatientSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        # Return surveys with status 'postoperative' or 'Post Operative'
-        return Survey.objects.filter(status__in=["postoperative", "Post Operative"])
-
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        doctor = request.user
+
+        surveys = Survey.objects.filter(
+            patient__doctor=doctor,          # 🔐 FIX
+            status__iexact="postoperative"
+        ).select_related("patient")
+
         data = []
 
-        for survey in queryset:
+        for survey in surveys:
             patient = survey.patient
 
-            # Build full URL for photo
             photo_url = None
             if patient.photo:
                 scheme = 'https' if request.is_secure() else 'http'
@@ -38,11 +39,13 @@ class PatientCompletedSurveys(generics.ListAPIView):
             data.append({
                 "pk": patient.id,
                 "id": patient.patient_id,
+                
                 "name": patient.name,
-                "photoUrl": photo_url  # send as photoUrl for consistency
+                "photoUrl": photo_url
             })
 
         return Response(data)
+
 
     
 # --------------------  survey not completed list --------------------
@@ -249,36 +252,35 @@ class HighRiskPatients(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # ✅ Only postoperative surveys with High or Very High risk
+        doctor = request.user
+
         surveys = Survey.objects.filter(
+            patient__doctor=doctor,           # 🔐 FIX
             status__iexact="postoperative",
             risk_level__in=["High", "Very High"]
-        )
+        ).select_related("patient")
+
         data = []
 
         for survey in surveys:
             patient = survey.patient
 
-            # Build full photo URL if photo exists
             photo_url = None
             if patient.photo:
                 scheme = 'https' if request.is_secure() else 'http'
                 host = request.get_host()
                 photo_url = f"{scheme}://{host}{patient.photo.url}"
 
-            # Risk level (fallback = "Unknown")
-            risk = survey.risk_level or "Unknown"
-
-            # ✅ Append only high-risk patients
             data.append({
                 "pk": patient.id,
                 "id": patient.patient_id,
                 "name": patient.name,
                 "photoUrl": photo_url,
-                "risk_status": risk,
+                "risk_status": survey.risk_level
             })
 
         return Response(data)
+
 
 
 class SurveySectionAnswersView(APIView):
@@ -304,6 +306,7 @@ class SurveySectionAnswersView(APIView):
                 for a in answers
             ]
         })
+
 
 
 

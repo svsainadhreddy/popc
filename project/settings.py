@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-7w+8=)t&k0o)3ksn&d=4wg#2v3#3*sp-5v9*@@f&97w)hp@y-#
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "127.0.0.1", 
+     "0.0.0.0", "10.37.216.204",
     
 ]
 
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'patients.apps.PatientsConfig',
     'surveys',
+    'llm',
     'rest_framework',
     'rest_framework.authtoken',  
 ]
