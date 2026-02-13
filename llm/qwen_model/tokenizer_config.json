@@ -31,10 +31,10 @@
     "<|im_end|>"
   ],
   "bos_token": null,
+  "chat_template": "{% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}{% endif %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
   "clean_up_tokenization_spaces": false,
   "eos_token": "<|im_end|>",
   "errors": "replace",
-  "extra_special_tokens": {},
   "model_max_length": 32768,
   "pad_token": "<|endoftext|>",
   "split_special_tokens": false,

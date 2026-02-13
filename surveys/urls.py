@@ -1,6 +1,6 @@
 from django.urls import path
 
-from surveys.views_qwen import PPCQwenChatView
+# from surveys.views_qwen import PPCQwenChatView
 from .views import (
     HighRiskPatients,
     SurveyByPatientWithRiskView,
@@ -11,6 +11,7 @@ from .views import (
     SurveyStatsView,
     SurveyByPatientView,
     DashboardView,
+    PPCQwenChatView
     
 )
 
